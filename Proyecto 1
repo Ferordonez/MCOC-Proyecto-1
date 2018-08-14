@@ -1,6 +1,8 @@
 import numpy as np 
 import scipy as sp 
 from numpy import *
+from matplotlib import pyplot as plt
+from numpy.linalg import inv
 
 largo = [12.*3.5, 12.*3.5, 12.*3.5, 12.*3.5, 8.*3.5, 8.*3.5, 8.*3.5, 8.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5] 
 masa = np.zeros(20)
@@ -19,7 +21,7 @@ M *= 1000
 e = 23.5 #GPa
 col = array([e*(600**4), e*(700**4), e*(800**4), e*(900**4), e*(1000**4)])  #12EI
 
-print col 
+#print (col) 
 
 piso1 = array([6, 2, 0, 1, 4])
 piso2 = array([4, 0, 1, 0, 4]) 
@@ -45,7 +47,7 @@ k[0] /= 4000**3
 k[1:] /= 2800**3
 
 
-print k #[KN/m]
+#print (k) #[KN/m]
 
 k_total = np.zeros((20,20)) 
 
@@ -57,7 +59,39 @@ for i in range(19):
 k_total[19][19] = k[19]
 k_total = np.matrix(k_total)
 
-print k_total #matriz de rigidez 
+#print (k_total) #matriz de rigidez 
+
+
+wn = sp.sqrt(k/masa) 
+fn = wn/2/sp.pi
+Tn= 1/fn 
+dt = 0.01
+tmax = 10
+vr = 0.0001 
+d0 = 10
+v0 = 0
+
+Id = np.matrix(sp.identity(20))
+zero = np.matrix(np.zeros((20,20)))
+M_I = inv(M)
+
+c = np.zeros((20,20)) 
+f1 = 0.2
+f2 = 2. 
+x1 = 0.025
+
+a0 = (4*sp.pi*f1*f2*x1)*(f1-f2)/(f1**2-f2**2)
+a1 = x1*(f1-f2)/(sp.pi*(f1**2-f2**2))
+
+c = a0*M + a1*k_total  
+c = np.matrix(c)
+#print (c) 
+
+
+
+#print (masa_1)
+A =  np.block([[zero,Id],[-M_I*k_total, -M_I*c]])
+print (A)
 
 zeros = sp.zeros(20) 
 masa[:] = -1/masa[:] 
@@ -73,7 +107,8 @@ def fun(t,z):
         Fr[i] = -Cap[i-19]*sp.tanh(z[i]-z[i-1]/vr)
      Famort = masa_1*Fr
      return sp.matmul(A,z) + Famort
-     
+
+
 t = sp.arange(0, tmax, dt)
 Nt = len(t)
 
@@ -142,6 +177,3 @@ plt.suptitle("Solucion por metodo de Euler")
 plt.show()
 
 
-np.savez('MatrixM.npz',M)
-np.savez('MatrixK.npz',k_total)
-np.savez('MatrixC.npz', c)

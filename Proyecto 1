@@ -1,0 +1,61 @@
+import numpy as np 
+import scipy as sp 
+from numpy import *
+
+largo = [12.*3.5, 12.*3.5, 12.*3.5, 12.*3.5, 8.*3.5, 8.*3.5, 8.*3.5, 8.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5] 
+masa = np.zeros(20)
+
+l = 0
+while l < len(largo):
+    masa[l] = 6.2*largo[l]
+    l += 1 
+
+#print masa
+
+M = sp.transpose(masa)*sp.identity(20)  
+M = array(M)
+M *= 1000 
+
+e = 23.5 #GPa
+col = array([e*(600**4), e*(700**4), e*(800**4), e*(900**4), e*(1000**4)])  #12EI
+
+print col 
+
+piso1 = array([6, 2, 0, 1, 4])
+piso2 = array([4, 0, 1, 0, 4]) 
+piso3 = array([0, 0, 1, 4, 0]) 
+piso4 = array([0, 1, 4, 0, 0])
+piso5 = array([5, 0, 0, 0, 0])
+
+k=[]
+for i in range(4):
+    k.append(sp.sum(col*piso1))
+for i in range(4):
+    k.append(sp.sum(col*piso2))
+for i in range(4): 
+    k.append(sp.sum(col*piso3))
+for i in range(4): 
+    k.append(sp.sum(col*piso4)) 
+for i in range(4): 
+    k.append(sp.sum(col*piso5))
+    
+#Dividimos por los largos al cubo
+k = array(k)
+k[0] /= 4000**3    
+k[1:] /= 2800**3
+
+
+print k #[KN/m]
+
+k_total = np.zeros((20,20)) 
+
+for i in range(19): 
+    k_total[i][i] = k[i] + k[i+1] 
+    k_total[i][i+1] = -k[i+1] 
+    k_total[i+1][i] = -k[i+1]
+
+k_total[19][19] = k[19]
+k_total = np.matrix(k_total)
+
+print k_total #matriz de rigidez 
+

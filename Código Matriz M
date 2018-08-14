@@ -1,0 +1,17 @@
+import numpy as np 
+import scipy as sp 
+from numpy import *
+
+largo = [12.*3.5, 12.*3.5, 12.*3.5, 12.*3.5, 8.*3.5, 8.*3.5, 8.*3.5, 8.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5, 4.*3.5] 
+masa = np.zeros(20)
+
+l = 0
+while l < len(largo):
+    masa[l] = 6.2*largo[l]
+    l += 1 
+
+#print masa
+
+M = sp.transpose(masa)*sp.identity(20)  
+M = array(M)
+M *= 1000 

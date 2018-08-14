@@ -59,3 +59,89 @@ k_total = np.matrix(k_total)
 
 print k_total #matriz de rigidez 
 
+zeros = sp.zeros(20) 
+masa[:] = -1/masa[:] 
+masa_1 = np.concatenate([zeros,masa])
+
+def fun(t,z):
+     if t > fun.tnextreport:
+        print ("  {} at t = {}".format(fun.solver, fun.tnextreport))
+        fun.tnextreport += 1
+     Fr = sp.zeros(40) 
+     Fr[19] = -Cap[0]*sp.tanh(z[20]/vr)
+     for i in arange(20,39): 
+        Fr[i] = -Cap[i-19]*sp.tanh(z[i]-z[i-1]/vr)
+     Famort = masa_1*Fr
+     return sp.matmul(A,z) + Famort
+     
+t = sp.arange(0, tmax, dt)
+Nt = len(t)
+
+z_euler = sp.zeros((40,Nt+1))
+z_RK45 = sp.zeros((40,Nt+1))
+
+z0 = sp.zeros(40) 
+i = 1
+while i <= 19: 
+    z0[i] = 0.5*i
+    i += 1 
+z0[20:] = v0
+#print (z0)
+
+z_euler[:,0] = z0
+z_RK45[:,0] = z0 
+
+#print ('Integrando con Euler')
+fun.tnextreport = 0
+fun.solver = 'Euler'
+
+i = 1
+ti = dt 
+while (ti < tmax): 
+    z_euler[:,i] = dt*fun(ti, z_euler[:,i-1]) + z_euler[:,i-1]
+    ti += dt 
+    i += 1
+
+#print ('Integrando con RK45') 
+#fun.tnextreport = 0
+#fun.solver = 'RK45'
+#solucion_rk45 = solve_ivp(fun, [0., tmax], z0, methor = 'RK45', t_eval=t,vectorized=False ) 
+#z_RK45[:,1:] = solucion_rk45.y
+
+plt.figure()
+ 
+for z, lab in zip([z_euler, z_RK45], ["Euler", "RK45"]):
+ 
+    u = z[0,:]
+    v = z[20,:]
+ 
+    #Extraer desplazamientos y velocidades
+    u = z[0,:-1]
+    v = z[20,:-1]
+ 
+    plt.subplot(2,1,1)
+    plt.plot(t, u, label=lab)
+    plt.ylim([-1.5*d0, 1.5*d0])
+    plt.xlim([0, tmax])
+    plt.ylabel("Despazamiento, $u = z_1$ (m)")
+    plt.grid(True)
+ 
+    vmax = max(abs(v))
+    plt.subplot(2,1,2)
+    plt.plot(t, v)
+    plt.ylabel("Velocidad, $\dot{u} = z_2$ (m/s)")
+    plt.xlabel("Tiempo, $t$ (s)")
+    plt.ylim([-1.5*vmax, 1.5*vmax])
+    plt.xlim([0, tmax])
+    plt.grid(True)
+ 
+plt.subplot(2,1,1)
+plt.legend()
+plt.suptitle("Solucion por metodo de Euler")
+ 
+plt.show()
+
+
+np.savez('MatrixM.npz',M)
+np.savez('MatrixK.npz',k_total)
+np.savez('MatrixC.npz', c)

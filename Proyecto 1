@@ -66,7 +66,7 @@ wn = sp.sqrt(k/masa)
 fn = wn/2/sp.pi
 Tn= 1/fn 
 dt = 0.01
-tmax = 10
+tmax = 100
 vr = 0.0001 
 d0 = 10
 v0 = 0
@@ -97,16 +97,16 @@ zeros = sp.zeros(20)
 masa[:] = -1/masa[:] 
 masa_1 = np.concatenate([zeros,masa])
 
-def fun(t,z):
-     if t > fun.tnextreport:
-        print ("  {} at t = {}".format(fun.solver, fun.tnextreport))
-        fun.tnextreport += 1
-     Fr = sp.zeros(40) 
-     Fr[19] = -Cap[0]*sp.tanh(z[20]/vr)
-     for i in arange(20,39): 
-        Fr[i] = -Cap[i-19]*sp.tanh(z[i]-z[i-1]/vr)
-     Famort = masa_1*Fr
-     return sp.matmul(A,z) + Famort
+ def fun(t,z):
+         if t > fun.tnextreport:
+            #print ("  {} at t = {}".format(fun.solver, fun.tnextreport))
+            fun.tnextreport += 1
+         Fr = sp.zeros(40) 
+         Fr[19] = -Cap[0]*sp.tanh(z[20]/vr)
+         for i in range(20): 
+            Fr[i+20] = -Cap[i]*M_I[i,i]*sp.tanh(z[i+20]-z[i+19]/vr)
+         
+         return sp.matmul(A,z) + Fr
 
 
 t = sp.arange(0, tmax, dt)
@@ -137,11 +137,11 @@ while (ti < tmax):
     ti += dt 
     i += 1
 
-#print ('Integrando con RK45') 
-#fun.tnextreport = 0
-#fun.solver = 'RK45'
-#solucion_rk45 = solve_ivp(fun, [0., tmax], z0, methor = 'RK45', t_eval=t,vectorized=False ) 
-#z_RK45[:,1:] = solucion_rk45.y
+print ('Integrando con RK45') 
+fun.tnextreport = 0
+fun.solver = 'RK45'
+solucion_rk45 = solve_ivp(fun, [0., tmax], z0, methor = 'RK45', t_eval=t,vectorized=False ) 
+z_RK45[:,1:] = solucion_rk45.y
 
 plt.figure()
  
@@ -156,7 +156,7 @@ for z, lab in zip([z_euler, z_RK45], ["Euler", "RK45"]):
  
     plt.subplot(2,1,1)
     plt.plot(t, u, label=lab)
-    plt.ylim([-1.5*d0, 1.5*d0])
+    #plt.ylim([-1.5*d0, 1.5*d0])
     plt.xlim([0, tmax])
     plt.ylabel("Despazamiento, $u = z_1$ (m)")
     plt.grid(True)
@@ -166,7 +166,7 @@ for z, lab in zip([z_euler, z_RK45], ["Euler", "RK45"]):
     plt.plot(t, v)
     plt.ylabel("Velocidad, $\dot{u} = z_2$ (m/s)")
     plt.xlabel("Tiempo, $t$ (s)")
-    plt.ylim([-1.5*vmax, 1.5*vmax])
+    #plt.ylim([-1.5*vmax, 1.5*vmax])
     plt.xlim([0, tmax])
     plt.grid(True)
  
